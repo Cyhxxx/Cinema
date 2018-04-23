@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+		"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.pdd.video.dao.MovieDao">
+	<resultMap type="com.pdd.video.bean.Movie" id="MovieResult" autoMapping="true">
+	</resultMap>
+	<!-- 获取推荐电影 -->
+	<select id="getRecommendMovie" resultMap="MovieResult">
+		select vid,cover,videoName,duration,tostarInfo,score,playerurl,publishTime from movie where mtid=10000001 order by rand() desc limit 0,30
+	</select>
+	<!-- 获取推荐电视剧-->
+	<select id="getRecommendTV" resultMap="MovieResult">
+		select vid,cover,videoName,tostarInfo,lastupdateinfo,playerurl,publishTime from movie where mtid=10000002 order by rand() desc limit 0,30
+	</select>
+	<!--  按分类查询视频 -->
+	<select id="getVideoByType" resultMap="MovieResult">
+		select m.vid,cover,videoName,duration,tostarInfo,score,playerurl,publishTime,lastupdateinfo from movie m inner join maintype mt on mt.mtid=m.mtid
+		<if test="subType!='' and subType!=null">
+			inner join moviesubtypemiddle mstm on mstm.vid=m.vid
+		</if>
+		where mt.mtName=#{mainType} 
+		<if test="subType!='' and subType!=null">
+			and mstm.mtSubid=#{subType}
+		</if>
+	</select>
+</mapper>

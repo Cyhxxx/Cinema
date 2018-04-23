@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+		"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.pdd.video.dao.TypeDao">
+	<select id="getSubType" resultType="com.pdd.video.bean.SubType">
+		select vst.mtSubid,vst.mtSubName from typemiddle vtm inner join maintype vt on vt.mtid=vtm.mtid inner join subtype vst on vst.mtSubid=vtm.mtsubid 
+		where vt.mtName=#{mainType}
+	</select>
+</mapper>

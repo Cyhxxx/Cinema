@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:context="http://www.springframework.org/schema/context"
+    xmlns:tx="http://www.springframework.org/schema/tx"
+    xmlns:aop="http://www.springframework.org/schema/aop"
+    xsi:schemaLocation="http://www.springframework.org/schema/beans
+        http://www.springframework.org/schema/beans/spring-beans.xsd
+        http://www.springframework.org/schema/context
+        http://www.springframework.org/schema/context/spring-context-4.3.xsd
+        http://www.springframework.org/schema/tx
+        http://www.springframework.org/schema/tx/spring-tx-4.3.xsd
+        http://www.springframework.org/schema/aop
+        http://www.springframework.org/schema/aop/spring-aop-4.3.xsd">
+        <context:component-scan base-package="com.pdd">
+        	<context:exclude-filter type="annotation" expression="org.springframework.stereotype.Controller"/>
+        </context:component-scan>
+        <context:annotation-config/>
+         <!-- 导入配置文件 -->
+      <context:property-placeholder location="classpath:dbconfiguration.properties" ignore-unresolvable="true"/>
+      <context:property-placeholder location="classpath:solr.properties"/>
+         <!--定义solr的server-->    
+	    <bean id="httpSolrServer" class="org.apache.solr.client.solrj.impl.HttpSolrClient">  
+	    	<constructor-arg name="builder" value="${solr.host.url}"/>
+	    </bean>
+        <!-- 页面伪静态化 -->
+        <bean id="freeMarkerConfigurer" class="org.springframework.web.servlet.view.freemarker.FreeMarkerConfigurer">
+	        <property name="templateLoaderPath" value="/WEB-INF/ftl/"></property>
+	        <property name="defaultEncoding" value="utf-8" />
+	        <property name="freemarkerSettings">
+	            <props>
+	                <prop key="template_update_delay">1</prop>
+	                <prop key="locale">zh_CN</prop>
+	                <prop key="datetime_format">yyyy-MM-dd</prop><!-- 时间格式化 -->
+	                <prop key="date_format">yyyy-MM-dd</prop>
+	                <prop key="number_format">#.##</prop>
+	            </props>
+	        </property>
+    	</bean>
+    	 <!-- 配置数据源 -->
+       <bean id="dataSource" class="org.apache.commons.dbcp.BasicDataSource" destroy-method="close">
+       		<property name="driverClassName" value="${jdbc.driver}"></property>
+       		<property name="url" value="${jdbc.url}"></property>
+       		<property name="username" value="${jdbc.user}"></property>
+       		<property name="password" value="${jdbc.pwd}"></property>
+       		 <!-- 初始化连接大小 -->
+	        <property name="initialSize" value="${jdbc.initialSize}"></property>
+	        <!-- 连接池最大数量 -->
+	        <property name="maxActive" value="${jdbc.maxActive}"></property>
+	        <!-- 连接池最大空闲 -->
+	        <property name="maxIdle" value="${jdbc.maxIdle}"></property>
+	        <!-- 连接池最小空闲 -->
+	        <property name="minIdle" value="${jdbc.minIdle}"></property>
+	        <!-- 获取连接最大等待时间 -->
+	        <property name="maxWait" value="${jdbc.maxWait}"></property>
+       </bean>
+       
+       <!-- SqlSession -->
+       <bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+       		<property name="dataSource" ref="dataSource"></property>
+       	    <property name="mapperLocations" value="classpath:com/pdd/video/dao/conf/*.xml"></property>
+       		<property name="configLocation" value="classpath:Mybatis-conf.xml"></property>
+       </bean>
+       
+       <!-- 自动扫描 -->
+       <bean id="MapperScanner" class="org.mybatis.spring.mapper.MapperScannerConfigurer">
+       		<property name="basePackage" value="com.pdd.video.dao"></property>
+       		<property name="sqlSessionFactoryBeanName" value="sqlSessionFactory"></property>
+       </bean>
+       <!-- 事务管理器 -->
+       <bean id="transactionManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+       		<property name="dataSource" ref="dataSource"></property>
+       </bean>
+       <!-- 事物配置 -->
+       <tx:advice id="tx" transaction-manager="transactionManager">
+	       	<tx:attributes>
+	       		<tx:method name="get*" read-only="true"/>
+	       		<tx:method name="update*"/>
+	       		<tx:method name="delete*"/>
+	       		<tx:method name="add*"/>
+	       	</tx:attributes>
+       </tx:advice>
+       <!-- Spring配置事物切点 -->
+       <aop:config>
+	       	<aop:pointcut expression="execution( * com.pdd.video.service.*.*(..))" id="cut"/>
+	       	<aop:advisor advice-ref="tx" pointcut-ref="cut"/>
+       </aop:config>
+</beans>
